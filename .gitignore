@@ -1,0 +1,21 @@
+# Captured Volo requests, sample responses, and anything else private
+local/
+
+# Secrets
+.env
+*.pem
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# CDK build output (regenerated on every synth)
+cdk.out/
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
