@@ -25,6 +25,18 @@ Dedup is per game: a game alerts once, then its row blocks it until a day after 
 - Volo app link: compare `links.volosports.com/game/<id>` with `/discover/daily-landing/?programId=<id>` on a future game and keep whichever opens the game more reliably.
 - Dedup cost: check seen IDs with `BatchGetItem` before the conditional put. Only matters if polling gets more frequent than hourly.
 
+## Text messages (SMS) instead of email
+
+SNS can send SMS, and a sign-up could subscribe a phone number with the same `sport` filter policy. The catch is that US SMS is not free or instant to set up:
+
+- Sending to US numbers requires a registered origination number. A toll-free number is the simplest: a monthly fee plus a verification that can take days to weeks. 10DLC is the other option, with brand and campaign registration.
+- New accounts start in the SMS sandbox: only up to 10 pre-verified phone numbers. Leaving it takes a support request.
+- Each message costs a fraction of a cent plus carrier fees. Small, but not always-free like email, and outside the "costs roughly nothing" goal. Check whether the Free plan allows it at all.
+- Set an SNS monthly SMS spend limit so a burst cannot run up a bill.
+- Sign-up page would need phone number validation, and SNS SMS opt-out ("STOP") handling.
+
+Web push (below) gets alerts onto a phone for free, so compare the two before starting.
+
 ## Later
 
 - Web push notifications (home-screen web app, sender Lambda, VAPID keys). Needs Docker for `PythonFunction`.
