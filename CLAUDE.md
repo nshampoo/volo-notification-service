@@ -28,4 +28,12 @@ Read `docs/BRIEF.md` first. It is the source of truth for goals, architecture, a
 - [x] Pushed to github.com/nshampoo/volo-notification-service (private).
 - [ ] MFA on root and on `nick`. Remind the user before anything runs on a schedule.
 - [ ] Docker installed (needed for `PythonFunction` in step 4).
-- [ ] Step 2: capture the Volo query.
+- [x] Step 2: Volo query captured. See "Volo API" below.
+
+## Volo API
+
+- `POST https://www.volosports.com/hapi/v1/graphql`, plain JSON, no auth or cookies needed (verified 2026-09-23).
+- Backend is Hasura, so filters use `_eq` / `_gte` / `_is_null` bool_exp syntax, and unknown fields return an error.
+- Our trimmed query: `services/poller/dropins.graphql`, table `discover_daily`, one row per game with open drop-in spots.
+- Volo NYC organization ID: `ff4d79f6-bba5-45dc-8532-46b8cf05f6e2`. Flag Football sport ID: `6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea`.
+- Samples in `local/`: `sample_response.json` (flag football, 0 rows at capture time), `sample_response_all.json` (all sports, 78 rows).

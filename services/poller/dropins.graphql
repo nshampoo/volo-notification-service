@@ -1,0 +1,34 @@
+query DropIns($where: discover_daily_bool_exp!, $limit: Int!) {
+  discover_daily(where: $where, limit: $limit, order_by: [{event_start_date: asc}, {_id: asc}]) {
+    _id
+    event_start_date
+    event_start_time_str
+    event_end_time_str
+    game_drop_in_capacity {
+      total_available_spots
+    }
+    game {
+      _id
+      start_time
+      end_time
+      venueByVenue {
+        shorthand_name
+        formatted_address
+        neighborhoodByNeighborhoodId {
+          name
+        }
+      }
+      leagueByLeague {
+        _id
+        name
+        display_name
+        gender
+        format_type
+        sportBySport {
+          _id
+          name
+        }
+      }
+    }
+  }
+}
