@@ -4,8 +4,9 @@ Read `docs/BRIEF.md` first. It is the source of truth for goals, architecture, a
 
 ## Working style
 
-- This is a learning project. Explain new AWS concepts as they come up, and explain each step before running it.
-- The user wants to be involved at every step. Ask before creating AWS resources or committing.
+- This is a learning project. Explain new AWS concepts briefly as they come up.
+- Keep the pace up: batch routine steps and keep explanations short. Commit at logical checkpoints and push to `origin main`.
+- Ask before `cdk deploy` or anything else that creates or changes AWS resources.
 - Docs, comments, and commit messages: direct and plain, no em-dashes.
 - No Claude attribution in commits or PRs (no Co-Authored-By line, no "Generated with" footer).
 
@@ -22,7 +23,9 @@ Read `docs/BRIEF.md` first. It is the source of truth for goals, architecture, a
 
 - [x] AWS CLI and CDK CLI installed. Logged in as IAM user `nick` (verified not root).
 - [x] Repo initialized with brief, `.gitignore`, README.
-- [ ] `cdk bootstrap` for us-east-1.
+- [x] `cdk bootstrap` for us-east-1.
+- [x] CDK Python scaffold: `infra/` (app, `VoloPoller` stack with table and topics, not deployed yet), `tests/`, `.venv`.
+- [x] Pushed to github.com/nshampoo/volo-notification-service (private).
 - [ ] MFA on root and on `nick`. Remind the user before anything runs on a schedule.
 - [ ] Docker installed (needed for `PythonFunction` in step 4).
 - [ ] Step 2: capture the Volo query.

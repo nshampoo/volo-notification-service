@@ -16,3 +16,13 @@ See [docs/BRIEF.md](docs/BRIEF.md) for the full plan and constraints.
 ## Private files
 
 `local/` is gitignored. Captured Volo requests and sample responses go there and never get committed.
+
+## Setup
+
+```
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/pytest
+cdk diff      # cdk.json pins the personal profile
+cdk deploy
+```
