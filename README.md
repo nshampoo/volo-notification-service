@@ -38,3 +38,25 @@ aws lambda invoke --profile personal --cli-binary-format raw-in-base64-out \
 ```
 
 The email only arrives if your subscription's filter policy includes that sport. A second identical invoke should report `"published": 0` (dedup).
+
+## Sign-up page and invite code
+
+Friends sign up at the `SiteUrl` output of the `VoloSignup` stack, with the invite code in the link: `https://<SiteUrl>/?invite=<code>`.
+
+The code is an SSM SecureString, created once by hand because CloudFormation cannot create SecureStrings:
+
+```
+aws ssm put-parameter --profile personal \
+  --name /volo-notifier/invite-code --type SecureString \
+  --value "$(python3 -c 'import secrets; print(secrets.token_urlsafe(8))')"
+```
+
+Read it back to build the link:
+
+```
+aws ssm get-parameter --profile personal --name /volo-notifier/invite-code --with-decryption --query Parameter.Value --output text
+```
+
+To revoke old links, run the `put-parameter` command again with `--overwrite`. Running Lambda containers keep the old code cached until they recycle, which can take minutes to hours.
+
+To see or remove subscribers: AWS console, SNS, Topics, `VoloPoller-DropinsTopic...`, Subscriptions tab. To change the sports list, edit `config/sports.json` and deploy.
