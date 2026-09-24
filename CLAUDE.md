@@ -28,9 +28,10 @@ See "Plan changes" at the end of `docs/BRIEF.md` for the current plan (email sig
 - [x] Step 2: Volo query captured. See "Volo API" below.
 - [x] Poller deployed and scheduled hourly. Publishes every sport with a `sport` message attribute; owner's email subscription filters to `flag-football`.
 - [x] Sign-up stack `VoloSignup` deployed: https://d1wfj80t6mlo6z.cloudfront.net (needs `?invite=`, code in SSM `/volo-notifier/invite-code`).
+- [x] Alert emails include a Volo app link (`links.volosports.com/game/<id>`), labeled as sometimes broken.
 - [ ] Owner tests a sign-up end to end with a `+friendtest` address.
-- [ ] MFA on root and on `nick`. Owner chose to defer it; mention it once more before anything public goes live.
-- [ ] Later: web push (needs Docker for `PythonFunction`), night and neighborhood filters.
+
+Open work lives in `docs/TODO.md`.
 
 ## Volo API
 
