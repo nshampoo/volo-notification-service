@@ -8,7 +8,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 import volo
-from filters import is_wanted
+from filters import FLAG_FOOTBALL_SPORT_ID, is_wanted
 from message import format_message
 from parse import parse_response
 
@@ -20,9 +20,20 @@ sns = boto3.client("sns")
 
 
 def handler(event, context):
+    """Scheduled runs send an EventBridge event, which has neither override.
+
+    For a manual test, invoke with {"sport_id": "...", "max_publish": 1} to use a
+    sport that has open drop-ins without flooding the inbox.
+    """
+    event = event or {}
+    sport_id = event.get("sport_id", FLAG_FOOTBALL_SPORT_ID)
+    max_publish = event.get("max_publish")
+
     now = datetime.now(timezone.utc)
-    dropins = parse_response(volo.fetch(volo.build_request_body(now)))
-    wanted = [d for d in dropins if is_wanted(d, now)]
+    dropins = parse_response(volo.fetch(volo.build_request_body(now, sport_id)))
+    wanted = [d for d in dropins if is_wanted(d, now, sport_id)]
+    if max_publish is not None:
+        wanted = wanted[:max_publish]
 
     published = 0
     for dropin in wanted:

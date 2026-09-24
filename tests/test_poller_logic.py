@@ -64,3 +64,9 @@ def test_message_uses_new_york_time():
 def test_message_single_spot():
     dropin = parse_response(FIXTURE)[2]
     assert format_message(dropin)["body"] == "6:00 PM at Other Field (Test Heights). 1 spot left."
+
+
+def test_filter_can_target_another_sport():
+    soccer = "518bb04c-762e-4b4d-bb41-8a76f7bffc01"
+    wanted = [d.game_id for d in parse_response(FIXTURE) if is_wanted(d, BEFORE_GAMES, soccer)]
+    assert wanted == ["game-soccer-open"]

@@ -7,7 +7,9 @@ from botocore.exceptions import ClientError
 
 import handler
 from parse import parse_response
-from test_poller_logic import FIXTURE
+from test_poller_logic import BEFORE_GAMES, FIXTURE
+
+SOCCER = "518bb04c-762e-4b4d-bb41-8a76f7bffc01"
 
 
 class FakeDynamo:
@@ -74,3 +76,20 @@ def test_failed_publish_forgets_the_dropin_so_next_run_retries(monkeypatch, drop
     with pytest.raises(RuntimeError):
         handler.notify_once(dropin, "table", "topic")
     assert dynamo.rows == {}
+
+
+def test_manual_invoke_can_override_sport_and_cap_publishes(monkeypatch):
+    sns = FakeSns()
+    monkeypatch.setattr(handler, "dynamodb", FakeDynamo())
+    monkeypatch.setattr(handler, "sns", sns)
+    monkeypatch.setenv("TABLE_NAME", "table")
+    monkeypatch.setenv("TOPIC_ARN", "topic")
+    sent_bodies = []
+    monkeypatch.setattr(handler.volo, "fetch", lambda body: sent_bodies.append(body) or FIXTURE)
+    monkeypatch.setattr(handler, "datetime", type("D", (), {"now": staticmethod(lambda tz: BEFORE_GAMES)}))
+
+    result = handler.handler({"sport_id": SOCCER, "max_publish": 1}, None)
+
+    assert result == {"fetched": 3, "wanted": 1, "published": 1}
+    assert SOCCER in json.dumps(sent_bodies[0])
+    assert sns.published[0]["Subject"].startswith("Soccer drop-in")

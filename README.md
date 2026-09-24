@@ -26,3 +26,15 @@ python3 -m venv .venv
 cdk diff      # cdk.json pins the personal profile
 cdk deploy
 ```
+
+## Manual test
+
+Invoke the poller for a sport that has open drop-ins, capped to one notification:
+
+```
+aws lambda invoke --profile personal --cli-binary-format raw-in-base64-out \
+  --function-name <Poller function name> \
+  --payload '{"sport_id":"518bb04c-762e-4b4d-bb41-8a76f7bffc01","max_publish":1}' out.json
+```
+
+That sport ID is Soccer. A second identical invoke should report `"published": 0` (dedup).

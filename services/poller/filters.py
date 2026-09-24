@@ -9,5 +9,5 @@ from datetime import datetime
 FLAG_FOOTBALL_SPORT_ID = "6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea"
 
 
-def is_wanted(dropin, now: datetime) -> bool:
-    return dropin.sport_id == FLAG_FOOTBALL_SPORT_ID and dropin.start > now and dropin.spots >= 1
+def is_wanted(dropin, now: datetime, sport_id: str = FLAG_FOOTBALL_SPORT_ID) -> bool:
+    return dropin.sport_id == sport_id and dropin.start > now and dropin.spots >= 1
