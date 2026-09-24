@@ -9,7 +9,17 @@ Coed drop-ins show a separate open-spot count per gender on Volo's site (confirm
 - Add a `gender` message attribute and a sign-up option so SNS filter policies can match on it alongside `sport`.
 - Also show the league type (coed, open, men, women) in the alert title. We already fetch `leagueByLeague.gender`.
 
+## Re-alert when a seen game gets more spots
+
+Dedup is per game: a game alerts once, then its row blocks it until a day after the game. If spots go up later (1 to 3, or full then reopened), nobody hears about it.
+
+- Store the last seen spot count on the dedup row.
+- Alert again when the count goes up, not when it goes down.
+- Consider a quiet period so a game flapping between 0 and 1 does not alert every hour.
+
 ## Smaller items
+
+- If alerts get noisy, switch to one digest email per sport per run. Must be per sport, not per person: a message tagged with several sports would match anyone subscribed to any of them.
 
 - MFA on root and on the `nick` IAM user.
 - Volo app link: compare `links.volosports.com/game/<id>` with `/discover/daily-landing/?programId=<id>` on a future game and keep whichever opens the game more reliably.
