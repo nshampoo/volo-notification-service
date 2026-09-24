@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 
 import volo
 from filters import is_open
-from message import format_message
+from message import format_email, format_message
 from parse import parse_response
 
 # Keep dedup rows a day past the game so a late re-listing still counts as seen.
@@ -87,7 +87,7 @@ def publish(dropin, topic_arn: str) -> None:
         Message=json.dumps(
             {
                 "default": json.dumps(msg),
-                "email": f"{msg['body']}\n\n{msg['url']}",
+                "email": format_email(msg),
             }
         ),
     )

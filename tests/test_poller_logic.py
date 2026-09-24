@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from filters import is_open
-from message import format_message
+from message import format_email, format_message
 from parse import VoloResponseError, parse_response
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "volo_dropins.json").read_text())
@@ -62,7 +62,16 @@ def test_message_uses_new_york_time():
         "title": "Flag Football drop-in: Thu Oct 1",
         "body": "7:15 PM at Test Field (Test Village). 2 spots left.",
         "url": "https://www.volosports.com/game/game-flag-open",
+        "app_url": "https://links.volosports.com/game/game-flag-open",
     }
+
+
+def test_email_puts_web_link_first_and_flags_app_link_as_unreliable():
+    email = format_email(format_message(parse_response(FIXTURE)[0]))
+    assert email.index("https://www.volosports.com/game/game-flag-open") < email.index(
+        "https://links.volosports.com/game/game-flag-open"
+    )
+    assert "sometimes shows an error" in email
 
 
 def test_message_single_spot():

@@ -15,4 +15,15 @@ def format_message(dropin) -> dict:
         "title": f"{dropin.sport} drop-in: {day}",
         "body": f"{time} at {place}. {spots} left.",
         "url": dropin.url,
+        "app_url": dropin.app_url,
     }
+
+
+def format_email(msg: dict) -> str:
+    return (
+        f"{msg['body']}\n\n"
+        f"Open on the web:\n{msg['url']}\n\n"
+        "Open in the Volo app (not officially supported, sometimes shows an error. "
+        "If it does, use the web link above):\n"
+        f"{msg['app_url']}"
+    )

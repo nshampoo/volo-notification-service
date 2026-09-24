@@ -8,6 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 GAME_URL = "https://www.volosports.com/game/{game_id}"
+# links.volosports.com is claimed by the Volo iOS app (Universal Links), so this
+# opens the app. Volo never meant it for outside links: it sometimes shows an
+# error instead of the game, so it is always sent alongside GAME_URL.
+APP_URL = "https://links.volosports.com/game/{game_id}"
 
 
 class VoloResponseError(Exception):
@@ -29,6 +33,10 @@ class DropIn:
     @property
     def url(self) -> str:
         return GAME_URL.format(game_id=self.game_id)
+
+    @property
+    def app_url(self) -> str:
+        return APP_URL.format(game_id=self.game_id)
 
 
 def parse_response(payload: dict) -> list[DropIn]:
