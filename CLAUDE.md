@@ -26,8 +26,8 @@ Read `docs/BRIEF.md` first. It is the source of truth for goals, architecture, a
 - [x] `cdk bootstrap` for us-east-1.
 - [x] CDK Python scaffold: `infra/` (app, `VoloPoller` stack with table and topics, not deployed yet), `tests/`, `.venv`.
 - [x] Pushed to github.com/nshampoo/volo-notification-service (private).
-- [x] Poller code, tests, and stack written (schedule disabled). Not deployed yet.
-- [ ] Deploy poller with email subscription, invoke manually, then set `schedule_enabled`.
+- [x] Poller deployed (schedule disabled). Manual invoke works: fetched 0, no flag football open on 2026-09-23.
+- [ ] Confirm both SNS email subscriptions, send a test message, then set `schedule_enabled` (after MFA).
 - [ ] MFA on root and on `nick`. Remind the user before anything runs on a schedule.
 - [ ] Docker installed (needed for `PythonFunction` in step 4).
 - [x] Step 2: Volo query captured. See "Volo API" below.
