@@ -1,0 +1,13 @@
+[
+  {"slug": "flag-football", "name": "Flag Football"},
+  {"slug": "soccer", "name": "Soccer"},
+  {"slug": "basketball", "name": "Basketball"},
+  {"slug": "volleyball", "name": "Volleyball"},
+  {"slug": "kickball", "name": "Kickball"},
+  {"slug": "softball", "name": "Softball"},
+  {"slug": "pickleball", "name": "Pickleball"},
+  {"slug": "dodgeball", "name": "Dodgeball"},
+  {"slug": "ultimate-frisbee", "name": "Ultimate Frisbee"},
+  {"slug": "futsal", "name": "Futsal"},
+  {"slug": "bowling", "name": "Bowling"}
+]

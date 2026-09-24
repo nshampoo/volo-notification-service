@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volo Drop-in Alerts</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --card: #fff; --text: #16181d; --muted: #5d6470;
+      --accent: #1f6feb; --border: #d9dde3; --ok: #1a7f37; --err: #cf222e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --card: #181b21; --text: #e8eaed; --muted: #9aa1ac;
+              --accent: #4c8dff; --border: #2c313a; --ok: #3fb950; --err: #ff6b6b; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--text);
+           font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 440px; margin: 0 auto; background: var(--card); border: 1px solid var(--border);
+           border-radius: 12px; padding: 24px; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    p.lede { color: var(--muted); margin: 0 0 20px; }
+    label.field { display: block; font-weight: 600; margin-bottom: 6px; }
+    input[type=email] { width: 100%; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border);
+                        border-radius: 8px; background: var(--bg); color: var(--text); }
+    fieldset { border: 0; padding: 0; margin: 20px 0; }
+    legend { font-weight: 600; margin-bottom: 6px; }
+    .sports { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 12px; }
+    .sports label { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .sports input { width: 18px; height: 18px; accent-color: var(--accent); }
+    button { width: 100%; padding: 12px; font-size: 1rem; font-weight: 600; color: #fff;
+             background: var(--accent); border: 0; border-radius: 8px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    #status { margin: 16px 0 0; min-height: 1.5em; }
+    #status.ok { color: var(--ok); } #status.err { color: var(--err); }
+    .fine { color: var(--muted); font-size: .85rem; margin-top: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Volo Drop-in Alerts</h1>
+  <p class="lede">Get an email when a new drop-in spot opens for the sports you pick in NYC. Checked about once an hour.</p>
+
+  <div id="no-invite" hidden>
+    <p>This page needs an invite link. Ask whoever sent you here for the full link.</p>
+  </div>
+
+  <form id="signup" hidden>
+    <label class="field" for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required>
+
+    <fieldset>
+      <legend>Sports</legend>
+      <div class="sports" id="sports"></div>
+    </fieldset>
+
+    <button type="submit" id="submit">Sign up</button>
+    <p id="status" role="status"></p>
+    <p class="fine">AWS will email you a confirmation link first. Every alert has an unsubscribe link.
+      To change sports later, sign up again with the same email.</p>
+  </form>
+</main>
+
+<script>
+(async () => {
+  const invite = new URLSearchParams(location.search).get("invite");
+  if (!invite) { document.getElementById("no-invite").hidden = false; return; }
+
+  // config.json is written at deploy time by CDK: the subscribe URL and the sports list.
+  const config = await (await fetch("config.json", { cache: "no-store" })).json();
+
+  const box = document.getElementById("sports");
+  for (const sport of config.sports) {
+    const label = document.createElement("label");
+    const input = Object.assign(document.createElement("input"),
+      { type: "checkbox", name: "sports", value: sport.slug, checked: sport.slug === "flag-football" });
+    label.append(input, sport.name);
+    box.append(label);
+  }
+
+  const form = document.getElementById("signup");
+  const status = document.getElementById("status");
+  const button = document.getElementById("submit");
+  form.hidden = false;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const sports = [...form.querySelectorAll("input[name=sports]:checked")].map(i => i.value);
+    if (!sports.length) { show("Pick at least one sport.", "err"); return; }
+
+    button.disabled = true;
+    show("Signing up...", "");
+    try {
+      const res = await fetch(config.subscribeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email.value, sports, invite }),
+      });
+      const data = await res.json();
+      show(data.message, res.ok ? "ok" : "err");
+    } catch {
+      show("Something went wrong. Try again in a minute.", "err");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function show(text, kind) { status.textContent = text; status.className = kind; }
+})();
+</script>
+</body>
+</html>

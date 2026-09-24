@@ -1,4 +1,4 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # Lambda code imports its modules flat (import parse), as it does in the Lambda runtime.
-pythonpath = [".", "services/poller", "tests"]
+pythonpath = [".", "services/poller", "services/subscribe", "tests"]
