@@ -48,7 +48,14 @@ class PollerStack(Stack):
         self.ops_topic = sns.Topic(self, "OpsTopic", display_name="Volo notifier ops")
 
         if notify_email:
-            self.dropins_topic.add_subscription(subs.EmailSubscription(notify_email))
+            # The poller tags every message with its sport. The filter policy means
+            # this subscription only receives flag football.
+            self.dropins_topic.add_subscription(
+                subs.EmailSubscription(
+                    notify_email,
+                    filter_policy={"sport": sns.SubscriptionFilter.string_filter(allowlist=["flag-football"])},
+                )
+            )
             self.ops_topic.add_subscription(subs.EmailSubscription(notify_email))
 
         # Stdlib only (boto3 ships with the Lambda runtime), so a plain zip of the
@@ -60,7 +67,8 @@ class PollerStack(Stack):
             architecture=lambda_.Architecture.ARM_64,
             code=lambda_.Code.from_asset(str(POLLER_CODE), exclude=["__pycache__"]),
             handler="handler.handler",
-            timeout=Duration.seconds(30),
+            # A first run can publish ~80 drop-ins across all sports.
+            timeout=Duration.seconds(60),
             memory_size=256,
             environment={
                 "TABLE_NAME": self.seen_table.table_name,

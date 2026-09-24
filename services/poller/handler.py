@@ -8,7 +8,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 import volo
-from filters import FLAG_FOOTBALL_SPORT_ID, is_wanted
+from filters import is_open
 from message import format_message
 from parse import parse_response
 
@@ -22,16 +22,18 @@ sns = boto3.client("sns")
 def handler(event, context):
     """Scheduled runs send an EventBridge event, which has neither override.
 
-    For a manual test, invoke with {"sport_id": "...", "max_publish": 1} to use a
-    sport that has open drop-ins without flooding the inbox.
+    For a manual test, invoke with {"sport": "soccer", "max_publish": 1} to publish
+    only that sport, without flooding anyone's inbox.
     """
     event = event or {}
-    sport_id = event.get("sport_id", FLAG_FOOTBALL_SPORT_ID)
+    only_sport = event.get("sport")
     max_publish = event.get("max_publish")
 
     now = datetime.now(timezone.utc)
-    dropins = parse_response(volo.fetch(volo.build_request_body(now, sport_id)))
-    wanted = [d for d in dropins if is_wanted(d, now, sport_id)]
+    dropins = parse_response(volo.fetch(volo.build_request_body(now)))
+    if len(dropins) >= volo.LIMIT:
+        print(f"WARNING: hit the {volo.LIMIT} row limit, some drop-ins may be missing")
+    wanted = [d for d in dropins if is_open(d, now) and (only_sport is None or d.sport_slug == only_sport)]
     if max_publish is not None:
         wanted = wanted[:max_publish]
 
@@ -77,6 +79,8 @@ def publish(dropin, topic_arn: str) -> None:
     sns.publish(
         TopicArn=topic_arn,
         Subject=msg["title"][:100],
+        # Subscribers' filter policies match on this, e.g. {"sport": ["flag-football"]}.
+        MessageAttributes={"sport": {"DataType": "String", "StringValue": dropin.sport_slug}},
         # "json" structure lets each subscriber type get its own format:
         # email gets readable text, everything else (the sender Lambda) gets JSON.
         MessageStructure="json",

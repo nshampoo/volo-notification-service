@@ -9,8 +9,6 @@ import handler
 from parse import parse_response
 from test_poller_logic import BEFORE_GAMES, FIXTURE
 
-SOCCER = "518bb04c-762e-4b4d-bb41-8a76f7bffc01"
-
 
 class FakeDynamo:
     def __init__(self):
@@ -66,6 +64,7 @@ def test_publish_sends_json_by_default_and_text_to_email(monkeypatch, dropin):
     message = json.loads(sent["Message"])
     assert json.loads(message["default"])["url"] == dropin.url
     assert dropin.url in message["email"]
+    assert sent["MessageAttributes"]["sport"]["StringValue"] == "flag-football"
 
 
 def test_failed_publish_forgets_the_dropin_so_next_run_retries(monkeypatch, dropin):
@@ -78,18 +77,26 @@ def test_failed_publish_forgets_the_dropin_so_next_run_retries(monkeypatch, drop
     assert dynamo.rows == {}
 
 
-def test_manual_invoke_can_override_sport_and_cap_publishes(monkeypatch):
+@pytest.fixture
+def run(monkeypatch):
+    """Call handler.handler against the fixture with fake AWS clients."""
     sns = FakeSns()
     monkeypatch.setattr(handler, "dynamodb", FakeDynamo())
     monkeypatch.setattr(handler, "sns", sns)
     monkeypatch.setenv("TABLE_NAME", "table")
     monkeypatch.setenv("TOPIC_ARN", "topic")
-    sent_bodies = []
-    monkeypatch.setattr(handler.volo, "fetch", lambda body: sent_bodies.append(body) or FIXTURE)
+    monkeypatch.setattr(handler.volo, "fetch", lambda body: FIXTURE)
     monkeypatch.setattr(handler, "datetime", type("D", (), {"now": staticmethod(lambda tz: BEFORE_GAMES)}))
+    return lambda event: (handler.handler(event, None), sns.published)
 
-    result = handler.handler({"sport_id": SOCCER, "max_publish": 1}, None)
 
+def test_scheduled_run_publishes_every_open_sport(run):
+    result, published = run({"source": "aws.events"})
+    assert result == {"fetched": 3, "wanted": 2, "published": 2}
+    assert [p["MessageAttributes"]["sport"]["StringValue"] for p in published] == ["flag-football", "soccer"]
+
+
+def test_manual_invoke_can_limit_to_one_sport_and_cap_publishes(run):
+    result, published = run({"sport": "soccer", "max_publish": 1})
     assert result == {"fetched": 3, "wanted": 1, "published": 1}
-    assert SOCCER in json.dumps(sent_bodies[0])
-    assert sns.published[0]["Subject"].startswith("Soccer drop-in")
+    assert published[0]["Subject"].startswith("Soccer drop-in")

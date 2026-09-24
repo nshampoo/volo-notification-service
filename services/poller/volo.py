@@ -5,15 +5,17 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-from filters import FLAG_FOOTBALL_SPORT_ID
-
 URL = "https://www.volosports.com/hapi/v1/graphql"
 NYC_ORG_ID = "ff4d79f6-bba5-45dc-8532-46b8cf05f6e2"
 QUERY = (Path(__file__).parent / "dropins.graphql").read_text()
 
 
-def build_request_body(now: datetime, sport_id: str = FLAG_FOOTBALL_SPORT_ID, limit: int = 100) -> dict:
-    """Open drop-ins for one sport in NYC that start after `now`."""
+# About 80 drop-ins are open at a typical time, so this leaves lots of headroom.
+LIMIT = 500
+
+
+def build_request_body(now: datetime, limit: int = LIMIT) -> dict:
+    """Open drop-ins for every sport in NYC that start after `now`."""
     where = {
         "_and": [
             {"organization_id": {"_eq": NYC_ORG_ID}},
@@ -26,7 +28,6 @@ def build_request_body(now: datetime, sport_id: str = FLAG_FOOTBALL_SPORT_ID, li
                         "organizationByOrganization": {"_id": {"_eq": NYC_ORG_ID}},
                         "archived": {"_eq": False},
                         "private": {"_eq": False},
-                        "sportBySport": {"_id": {"_eq": sport_id}},
                     },
                 }
             },

@@ -27,6 +27,7 @@ query DropIns($where: discover_daily_bool_exp!, $limit: Int!) {
         sportBySport {
           _id
           name
+          slug
         }
       }
     }

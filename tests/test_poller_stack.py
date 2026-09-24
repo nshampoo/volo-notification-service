@@ -53,3 +53,9 @@ def test_alarm_fires_on_any_error():
 def test_email_subscribes_to_both_topics():
     synth(notify_email="me@example.com").resource_count_is("AWS::SNS::Subscription", 2)
     synth().resource_count_is("AWS::SNS::Subscription", 0)
+
+
+def test_owner_email_only_gets_flag_football():
+    synth(notify_email="me@example.com").has_resource_properties(
+        "AWS::SNS::Subscription", {"Protocol": "email", "FilterPolicy": {"sport": ["flag-football"]}}
+    )

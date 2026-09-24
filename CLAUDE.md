@@ -21,17 +21,15 @@ Read `docs/BRIEF.md` first. It is the source of truth for goals, architecture, a
 
 ## Progress
 
+See "Plan changes" at the end of `docs/BRIEF.md` for the current plan (email sign-ups with sport filters, web push parked).
+
 - [x] AWS CLI and CDK CLI installed. Logged in as IAM user `nick` (verified not root).
-- [x] Repo initialized with brief, `.gitignore`, README.
-- [x] `cdk bootstrap` for us-east-1.
-- [x] CDK Python scaffold: `infra/` (app, `VoloPoller` stack with table and topics, not deployed yet), `tests/`, `.venv`.
-- [x] Pushed to github.com/nshampoo/volo-notification-service (private).
-- [x] Poller deployed (schedule disabled). Manual invoke works: fetched 0, no flag football open on 2026-09-23.
-- [x] Email subscriptions confirmed. End-to-end test with soccer (`sport_id` + `max_publish` overrides) published 1, then 0 on rerun.
-- [ ] Set `schedule_enabled` in cdk.json and deploy (after MFA).
-- [ ] MFA on root and on `nick`. Remind the user before anything runs on a schedule.
-- [ ] Docker installed (needed for `PythonFunction` in step 4).
+- [x] Repo, `cdk bootstrap`, CDK Python scaffold, pushed to github.com/nshampoo/volo-notification-service (private).
 - [x] Step 2: Volo query captured. See "Volo API" below.
+- [x] Poller deployed and scheduled hourly. Publishes every sport with a `sport` message attribute; owner's email subscription filters to `flag-football`.
+- [ ] Sign-up stack: S3 + CloudFront page, subscribe Lambda (Function URL), invite code in SSM, sport checkboxes.
+- [ ] MFA on root and on `nick`. Owner chose to defer it; mention it once more before anything public goes live.
+- [ ] Later: web push (needs Docker for `PythonFunction`), night and neighborhood filters.
 
 ## Volo API
 

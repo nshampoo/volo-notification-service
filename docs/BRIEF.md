@@ -89,3 +89,20 @@ volo-notifier/
 ## Style
 
 Docs, comments, and commit messages: direct and plain, no em-dashes.
+
+## Plan changes (2026-09-23)
+
+Decided after step 3, replacing step 4 above:
+
+- **Email first, for friends too.** A sign-up page where anyone with the link enters their email and picks sports. The subscribe endpoint calls SNS `subscribe` with protocol `email`, so SNS handles double opt-in and unsubscribe links.
+- **Sports via SNS filter policies.** The poller fetches every sport in its one request and tags each message with a `sport` attribute (Volo's slug, e.g. `flag-football`). Each subscription's filter policy picks sports. The owner's subscription is `flag-football` only.
+- **Invite code.** The sign-up page and endpoint require a code in the shared link, to keep it among friends (Volo's data) and stop form abuse. The code lives in SSM Parameter Store, not git.
+- **Admin is the AWS console.** SNS topic Subscriptions tab shows each email, status, and filter policy, with delete and edit. No custom admin script or page.
+- **Web push is parked** for later. Filters for nights and neighborhoods are also later.
+- **MFA:** owner chose to run the schedule before enabling MFA. Still recommended.
+
+Revised build order:
+1. Hourly schedule on. Done.
+2. Poller publishes all sports with a `sport` tag. Done.
+3. Sign-up stack: S3 + CloudFront page with sport checkboxes, subscribe Lambda behind a Function URL, invite code in SSM.
+4. Later: web push, more filters.

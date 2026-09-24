@@ -6,7 +6,9 @@
         "event_start_date": "2026-10-01T23:15:00+00:00",
         "event_start_time_str": "19:15",
         "event_end_time_str": "20:00",
-        "game_drop_in_capacity": {"total_available_spots": 2},
+        "game_drop_in_capacity": {
+          "total_available_spots": 2
+        },
         "game": {
           "_id": "game-flag-open",
           "start_time": "2026-10-01T23:15:00+00:00",
@@ -14,7 +16,9 @@
           "venueByVenue": {
             "shorthand_name": "Test Field ",
             "formatted_address": "1 Test St, New York, NY",
-            "neighborhoodByNeighborhoodId": {"name": "Test Village"}
+            "neighborhoodByNeighborhoodId": {
+              "name": "Test Village"
+            }
           },
           "leagueByLeague": {
             "_id": "league-flag",
@@ -22,7 +26,11 @@
             "display_name": "Thursday - Flag Football - Test Village",
             "gender": "coed",
             "format_type": "7v7",
-            "sportBySport": {"_id": "6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea", "name": "Flag Football"}
+            "sportBySport": {
+              "_id": "6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea",
+              "name": "Flag Football",
+              "slug": "flag-football"
+            }
           }
         }
       },
@@ -47,7 +55,11 @@
             "display_name": "Thursday - Flag Football - Test Village",
             "gender": "coed",
             "format_type": "7v7",
-            "sportBySport": {"_id": "6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea", "name": "Flag Football"}
+            "sportBySport": {
+              "_id": "6a4c2578-be2b-41cf-8b8a-f8c3ede1cfea",
+              "name": "Flag Football",
+              "slug": "flag-football"
+            }
           }
         }
       },
@@ -56,7 +68,9 @@
         "event_start_date": "2026-10-01T22:00:00+00:00",
         "event_start_time_str": "18:00",
         "event_end_time_str": "18:45",
-        "game_drop_in_capacity": {"total_available_spots": 1},
+        "game_drop_in_capacity": {
+          "total_available_spots": 1
+        },
         "game": {
           "_id": "game-soccer-open",
           "start_time": "2026-10-01T22:00:00+00:00",
@@ -64,7 +78,9 @@
           "venueByVenue": {
             "shorthand_name": "Other Field",
             "formatted_address": "2 Test St, New York, NY",
-            "neighborhoodByNeighborhoodId": {"name": "Test Heights"}
+            "neighborhoodByNeighborhoodId": {
+              "name": "Test Heights"
+            }
           },
           "leagueByLeague": {
             "_id": "league-soccer",
@@ -72,7 +88,11 @@
             "display_name": "Thursday - Soccer - Test Heights",
             "gender": "coed",
             "format_type": "6v6",
-            "sportBySport": {"_id": "518bb04c-762e-4b4d-bb41-8a76f7bffc01", "name": "Soccer"}
+            "sportBySport": {
+              "_id": "518bb04c-762e-4b4d-bb41-8a76f7bffc01",
+              "name": "Soccer",
+              "slug": "soccer"
+            }
           }
         }
       }

@@ -20,6 +20,7 @@ class DropIn:
     start: datetime  # timezone-aware, UTC
     spots: int
     sport_id: str
+    sport_slug: str  # e.g. flag-football, used as the SNS filter attribute
     sport: str
     league: str
     venue: str
@@ -54,6 +55,7 @@ def _parse_row(row: dict) -> DropIn:
             start=datetime.fromisoformat(game["start_time"]),
             spots=int(capacity.get("total_available_spots") or 0),
             sport_id=league["sportBySport"]["_id"],
+            sport_slug=league["sportBySport"]["slug"],
             sport=league["sportBySport"]["name"],
             league=league["display_name"],
             venue=venue["shorthand_name"].strip(),

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from filters import is_wanted
+from filters import is_open
 from message import format_message
 from parse import VoloResponseError, parse_response
 
@@ -41,14 +41,18 @@ def test_parse_raises_on_changed_shape():
         parse_response({"data": {"discover_daily": [{"_id": "x", "game": {"_id": "x"}}]}})
 
 
-def test_filter_keeps_only_open_future_flag_football():
-    wanted = [d.game_id for d in parse_response(FIXTURE) if is_wanted(d, BEFORE_GAMES)]
-    assert wanted == ["game-flag-open"]
+def test_parse_reads_sport_slug_for_filter_policies():
+    assert [d.sport_slug for d in parse_response(FIXTURE)] == ["flag-football", "flag-football", "soccer"]
+
+
+def test_filter_keeps_open_future_games_of_any_sport():
+    wanted = [d.game_id for d in parse_response(FIXTURE) if is_open(d, BEFORE_GAMES)]
+    assert wanted == ["game-flag-open", "game-soccer-open"]
 
 
 def test_filter_drops_games_that_already_started():
     after = datetime(2026, 10, 2, 12, 0, tzinfo=timezone.utc)
-    assert not any(is_wanted(d, after) for d in parse_response(FIXTURE))
+    assert not any(is_open(d, after) for d in parse_response(FIXTURE))
 
 
 def test_message_uses_new_york_time():
@@ -65,8 +69,3 @@ def test_message_single_spot():
     dropin = parse_response(FIXTURE)[2]
     assert format_message(dropin)["body"] == "6:00 PM at Other Field (Test Heights). 1 spot left."
 
-
-def test_filter_can_target_another_sport():
-    soccer = "518bb04c-762e-4b4d-bb41-8a76f7bffc01"
-    wanted = [d.game_id for d in parse_response(FIXTURE) if is_wanted(d, BEFORE_GAMES, soccer)]
-    assert wanted == ["game-soccer-open"]
