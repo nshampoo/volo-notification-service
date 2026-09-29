@@ -4,7 +4,7 @@ Sends a push notification to my iPhone when a new flag football drop-in opens on
 
 An hourly Lambda checks Volo for drop-ins, skips ones it has already seen, and publishes new ones to SNS. A second Lambda turns those into web push notifications for a home-screen web app. Everything is AWS CDK in Python.
 
-See [docs/BRIEF.md](docs/BRIEF.md) for the full plan and constraints.
+See [docs/BRIEF.md](docs/BRIEF.md) for the full plan and constraints. New laptop: [docs/NEW_MACHINE.md](docs/NEW_MACHINE.md).
 
 ## Prerequisites
 
