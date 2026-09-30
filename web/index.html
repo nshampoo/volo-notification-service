@@ -21,7 +21,7 @@
     h1 { font-size: 1.4rem; margin: 0 0 4px; }
     p.lede { color: var(--muted); margin: 0 0 20px; }
     label.field { display: block; font-weight: 600; margin-bottom: 6px; }
-    input[type=email] { width: 100%; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border);
+    input[type=email], input[type=password] { width: 100%; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border);
                         border-radius: 8px; background: var(--bg); color: var(--text); }
     fieldset { border: 0; padding: 0; margin: 20px 0; }
     legend { font-weight: 600; margin-bottom: 6px; }
@@ -41,11 +41,13 @@
   <h1>Volo Drop-in Alerts</h1>
   <p class="lede">Get an email when a new drop-in spot opens for the sports you pick in NYC. Checked about once an hour.</p>
 
-  <div id="no-invite" hidden>
-    <p>This page needs an invite link. Ask whoever sent you here for the full link.</p>
-  </div>
-
   <form id="signup" hidden>
+    <div id="password-field" hidden>
+      <label class="field" for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password">
+      <p class="fine">Ask whoever sent you here for it.</p>
+    </div>
+
     <label class="field" for="email">Email</label>
     <input id="email" name="email" type="email" autocomplete="email" required>
 
@@ -63,8 +65,11 @@
 
 <script>
 (async () => {
-  const invite = new URLSearchParams(location.search).get("invite");
-  if (!invite) { document.getElementById("no-invite").hidden = false; return; }
+  // The password is the invite code. An invite link fills it in; otherwise the visitor types it.
+  // The subscribe Lambda checks it either way.
+  const linkInvite = new URLSearchParams(location.search).get("invite");
+  const password = document.getElementById("password");
+  if (!linkInvite) { document.getElementById("password-field").hidden = false; password.required = true; }
 
   // config.json is written at deploy time by CDK: the subscribe URL and the sports list.
   const config = await (await fetch("config.json", { cache: "no-store" })).json();
@@ -94,7 +99,7 @@
       const res = await fetch(config.subscribeUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.value, sports, invite }),
+        body: JSON.stringify({ email: form.email.value, sports, invite: linkInvite || password.value }),
       });
       const data = await res.json();
       show(data.message, res.ok ? "ok" : "err");

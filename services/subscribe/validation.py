@@ -26,7 +26,7 @@ def parse_signup(body: str, invite_code: str, allowed_sports: set[str]) -> tuple
     # so response timing does not leak how much of a guess was right.
     invite = data.get("invite")
     if not isinstance(invite, str) or not hmac.compare_digest(invite.encode(), invite_code.encode()):
-        raise InvalidRequest("That invite link is not valid. Ask for a new one.")
+        raise InvalidRequest("That password or invite link is not right. Ask whoever sent you here.")
 
     email = data.get("email")
     if not isinstance(email, str):

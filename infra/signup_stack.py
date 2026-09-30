@@ -90,12 +90,12 @@ class SignupStack(Stack):
             )
         )
 
-        # Public HTTPS endpoint. CORS only lets browsers call it from our page;
-        # the invite code is what stops everyone else.
+        # Public HTTPS endpoint. CORS only lets browsers call it from our page, either directly
+        # or embedded on shampoe.com/volo/; the invite code is what stops everyone else.
         subscribe_url = subscribe_fn.add_function_url(
             auth_type=lambda_.FunctionUrlAuthType.NONE,
             cors=lambda_.FunctionUrlCorsOptions(
-                allowed_origins=[site_origin],
+                allowed_origins=[site_origin, "https://shampoe.com"],
                 allowed_methods=[lambda_.HttpMethod.POST],
                 allowed_headers=["content-type"],
             ),

@@ -50,6 +50,13 @@ def test_subscribe_url_is_public_but_cors_locked_to_post():
     )
 
 
+def test_subscribe_url_allows_the_site_and_shampoe_com():
+    synth().has_resource_properties(
+        "AWS::Lambda::Url",
+        {"Cors": Match.object_like({"AllowOrigins": Match.array_with(["https://shampoe.com"])})},
+    )
+
+
 def test_subscribe_lambda_knows_allowed_sports():
     synth().has_resource_properties(
         "AWS::Lambda::Function",
