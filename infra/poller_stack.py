@@ -9,6 +9,7 @@ from aws_cdk import aws_events_targets as targets
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_sns as sns
+from aws_cdk import aws_ssm as ssm
 from aws_cdk import aws_sns_subscriptions as subs
 from constructs import Construct
 
@@ -39,6 +40,24 @@ class PollerStack(Stack):
             time_to_live_attribute="expires_at",
             # Only dedup state lives here, so it is safe to delete with the stack.
             removal_policy=RemovalPolicy.DESTROY,
+        )
+
+        # One row per New York day: how many new drop-ins were spotted, and how many were
+        # flag football. Unlike the dedup table this is history, so it outlives the stack.
+        self.stats_table = dynamodb.Table(
+            self,
+            "DropinStats",
+            partition_key=dynamodb.Attribute(name="day", type=dynamodb.AttributeType.STRING),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+        # shampoe.com's Live page reads the counts; it finds the table through this parameter.
+        ssm.StringParameter(
+            self,
+            "StatsTableName",
+            parameter_name="/volo-notifier/stats-table",
+            string_value=self.stats_table.table_name,
+            description="DynamoDB table with daily Volo drop-in counts (read by shampoe.com)",
         )
 
         # New drop-ins. Email now, the web push sender later.
@@ -73,6 +92,7 @@ class PollerStack(Stack):
             environment={
                 "TABLE_NAME": self.seen_table.table_name,
                 "TOPIC_ARN": self.dropins_topic.topic_arn,
+                "STATS_TABLE_NAME": self.stats_table.table_name,
             },
             log_group=logs.LogGroup(
                 self,
@@ -83,6 +103,7 @@ class PollerStack(Stack):
         )
         # Grants add least-privilege IAM statements to the Lambda's execution role.
         self.seen_table.grant_read_write_data(self.poller)
+        self.stats_table.grant_write_data(self.poller)
         self.dropins_topic.grant_publish(self.poller)
 
         # Any failed run (Volo down, response shape changed, bug) emails the ops topic.

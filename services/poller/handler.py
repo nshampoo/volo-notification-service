@@ -3,6 +3,7 @@
 import json
 import os
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import boto3
 from botocore.exceptions import ClientError
@@ -14,6 +15,9 @@ from parse import parse_response
 
 # Keep dedup rows a day past the game so a late re-listing still counts as seen.
 TTL_AFTER_GAME = timedelta(days=1)
+
+# Daily counts are bucketed by the New York calendar day the drop-in was spotted.
+NEW_YORK = ZoneInfo("America/New_York")
 
 dynamodb = boto3.client("dynamodb")
 sns = boto3.client("sns")
@@ -41,6 +45,7 @@ def handler(event, context):
     for dropin in wanted:
         if notify_once(dropin, os.environ["TABLE_NAME"], os.environ["TOPIC_ARN"]):
             published += 1
+            count_dropin(dropin, os.environ["STATS_TABLE_NAME"], now)
 
     result = {"fetched": len(dropins), "wanted": len(wanted), "published": published}
     print(json.dumps(result))
@@ -91,3 +96,25 @@ def publish(dropin, topic_arn: str) -> None:
             }
         ),
     )
+
+
+def count_dropin(dropin, stats_table: str, spotted_at: datetime) -> None:
+    """Add one to today's tally: every new drop-in counts toward total, flag football also
+    toward football. These counts feed the chart on shampoe.com/live/.
+
+    Never raises: the alert already went out, and a missed count is better than a retry
+    that would email everyone twice.
+    """
+    day = spotted_at.astimezone(NEW_YORK).date().isoformat()
+    football = 1 if dropin.sport_slug == "flag-football" else 0
+    try:
+        # ADD creates the row and the attributes on first use, so there is no setup per day.
+        dynamodb.update_item(
+            TableName=stats_table,
+            Key={"day": {"S": day}},
+            UpdateExpression="ADD #total :one, football :football",
+            ExpressionAttributeNames={"#total": "total"},
+            ExpressionAttributeValues={":one": {"N": "1"}, ":football": {"N": str(football)}},
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: could not count drop-in {dropin.game_id} for {day}: {e}")

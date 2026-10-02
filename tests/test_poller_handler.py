@@ -1,6 +1,8 @@
 """Dedup and publish behavior, with fake DynamoDB and SNS clients."""
 
 import json
+from dataclasses import replace
+from datetime import datetime, timezone
 
 import pytest
 from botocore.exceptions import ClientError
@@ -13,6 +15,7 @@ from test_poller_logic import BEFORE_GAMES, FIXTURE
 class FakeDynamo:
     def __init__(self):
         self.rows = {}
+        self.counts = {}
 
     def put_item(self, TableName, Item, ConditionExpression):
         key = Item["dropin_id"]["S"]
@@ -22,6 +25,12 @@ class FakeDynamo:
 
     def delete_item(self, TableName, Key):
         self.rows.pop(Key["dropin_id"]["S"], None)
+
+    def update_item(self, TableName, Key, UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues):
+        # Enough of DynamoDB's ADD to check the daily counts.
+        day = self.counts.setdefault(Key["day"]["S"], {"total": 0, "football": 0})
+        day["total"] += int(ExpressionAttributeValues[":one"]["N"])
+        day["football"] += int(ExpressionAttributeValues[":football"]["N"])
 
 
 class FakeSns:
@@ -80,23 +89,50 @@ def test_failed_publish_forgets_the_dropin_so_next_run_retries(monkeypatch, drop
 @pytest.fixture
 def run(monkeypatch):
     """Call handler.handler against the fixture with fake AWS clients."""
-    sns = FakeSns()
-    monkeypatch.setattr(handler, "dynamodb", FakeDynamo())
+    sns, dynamo = FakeSns(), FakeDynamo()
+    monkeypatch.setattr(handler, "dynamodb", dynamo)
     monkeypatch.setattr(handler, "sns", sns)
     monkeypatch.setenv("TABLE_NAME", "table")
     monkeypatch.setenv("TOPIC_ARN", "topic")
+    monkeypatch.setenv("STATS_TABLE_NAME", "stats")
     monkeypatch.setattr(handler.volo, "fetch", lambda body: FIXTURE)
     monkeypatch.setattr(handler, "datetime", type("D", (), {"now": staticmethod(lambda tz: BEFORE_GAMES)}))
-    return lambda event: (handler.handler(event, None), sns.published)
+    go = lambda event: (handler.handler(event, None), sns.published)  # noqa: E731
+    go.dynamo = dynamo
+    return go
 
 
-def test_scheduled_run_publishes_every_open_sport(run):
+def test_scheduled_run_publishes_and_counts_every_open_sport(run):
     result, published = run({"source": "aws.events"})
     assert result == {"fetched": 3, "wanted": 2, "published": 2}
     assert [p["MessageAttributes"]["sport"]["StringValue"] for p in published] == ["flag-football", "soccer"]
+    # Both new drop-ins land in one day's tally; one of them was flag football.
+    assert [day for day in run.dynamo.counts.values()] == [{"total": 2, "football": 1}]
 
 
 def test_manual_invoke_can_limit_to_one_sport_and_cap_publishes(run):
     result, published = run({"sport": "soccer", "max_publish": 1})
     assert result == {"fetched": 3, "wanted": 1, "published": 1}
     assert published[0]["Subject"].startswith("Soccer drop-in")
+
+
+def test_counts_new_dropins_by_new_york_day(monkeypatch, dropin):
+    dynamo = FakeDynamo()
+    monkeypatch.setattr(handler, "dynamodb", dynamo)
+    other = replace(dropin, game_id="game-soccer", sport_slug="soccer")
+
+    # 01:30 UTC on Oct 3 is still Oct 2 in New York.
+    spotted = datetime(2026, 10, 3, 1, 30, tzinfo=timezone.utc)
+    handler.count_dropin(dropin, "stats", spotted)
+    handler.count_dropin(other, "stats", spotted)
+
+    assert dynamo.counts == {"2026-10-02": {"total": 2, "football": 1}}
+
+
+def test_a_failed_count_never_breaks_the_alert(monkeypatch, dropin):
+    class BrokenStats(FakeDynamo):
+        def update_item(self, **kwargs):
+            raise RuntimeError("DynamoDB down")
+
+    monkeypatch.setattr(handler, "dynamodb", BrokenStats())
+    handler.count_dropin(dropin, "stats", datetime(2026, 10, 2, 12, tzinfo=timezone.utc))

@@ -59,3 +59,15 @@ def test_owner_email_only_gets_flag_football():
     synth(notify_email="me@example.com").has_resource_properties(
         "AWS::SNS::Subscription", {"Protocol": "email", "FilterPolicy": {"sport": ["flag-football"]}}
     )
+
+
+def test_daily_stats_table_is_kept_and_published_for_the_website():
+    template = synth()
+    template.has_resource(
+        "AWS::DynamoDB::Table",
+        {
+            "Properties": {"KeySchema": [{"AttributeName": "day", "KeyType": "HASH"}]},
+            "DeletionPolicy": "Retain",
+        },
+    )
+    template.has_resource_properties("AWS::SSM::Parameter", {"Name": "/volo-notifier/stats-table"})
